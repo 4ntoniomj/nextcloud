@@ -15,9 +15,16 @@ A diferencia de las instalaciones monolíticas o basadas en Apache, este stack s
 
 ## 🚀 Requisitos Previos
 
-* [Docker](https://docs.docker.com/get-docker/) instalado.
+* [Docker](https://docs.docker.com/get-docker/).
 * [Docker Compose](https://docs.docker.com/compose/install/) (v2+).
 * Git.
+
+Instalación:
+```bash
+curl -fsSL https://get.docker.com -o /tmp/get-docker.sh
+sudo sh /tmp/get-docker.sh && rm /tmp/get-docker.sh
+sudo apt update && sudo apt install -y git
+```
 
 ---
 
