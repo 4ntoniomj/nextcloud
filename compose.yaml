@@ -1,0 +1,41 @@
+services:
+
+  db:
+    image: postgres:18.3-alpine3.23
+    container_name: "BSD_Nextcloud"
+    restart: unless-stopped
+    shm_size: 256mb
+    volumes:
+      - PostgresNextcloudData:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    expose:
+      - "5432"
+
+  nextcloud:
+    image: nextcloud:33.0.0-fpm-alpine
+    container_name: "Nextcloud"
+    restart: unless-stopped
+    volumes:
+      - NextcloudData:/var/www/html
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=db
+
+  nginx:
+    image: nginx:1.29.6-alpine
+    container_name: "Web_Nextcloud"
+    restart: unless-stopped
+    volumes:
+     - NextcloudData:/var/www/html:ro
+     - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "80:80"
+
+volumes:
+  PostgresNextcloudData:
+  NextcloudData:
