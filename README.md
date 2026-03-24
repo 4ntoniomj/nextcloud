@@ -89,7 +89,7 @@ Si solo quieres usar Nextcloud dentro de tu red local pero con HTTPS funcional:
 > En ambos casos, el **Token** debe estar correctamente configurado en el archivo `.env` para que Caddy pueda generar el certificado de seguridad y usar el archivo de configuración de caddy oportuno.
 
 ---
-## ## 🚀 Aceleración y Consistencia (Redis)
+## 🚀 Aceleración y Consistencia (Redis)
 
 Este proyecto integra **Redis 7.2** como motor de almacenamiento en caché en memoria. Su función no es solo mejorar la velocidad, sino evitar la corrupción de archivos en entornos multiusuario.
 
