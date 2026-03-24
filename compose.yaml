@@ -20,6 +20,8 @@ services:
     container_name: "Redis_Nextcloud"
     command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru
     restart: unless-stopped
+    networks:
+      - next_frontend
 
   db:
     image: postgres:17-alpine
@@ -34,6 +36,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     expose:
       - "5432"
+    networks:
+      - next_backend
 
   nextcloud:
     image: nextcloud:33.0.0-fpm-alpine
@@ -52,6 +56,31 @@ services:
     depends_on:
       - db
       - redis
+    networks:
+      - next_frontend
+      - next_backend
+
+  cron:
+    image: nextcloud:33.0.0-fpm-alpine
+    container_name: "Nextcloud"
+    restart: unless-stopped
+    volumes:
+      - NextcloudData:/var/www/html
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=db
+      - REDIS_HOST=redis
+      - TRUSTED_PROXIES=caddy
+      - OVERWRITEPROTOCOL=https
+    depends_on:
+      - db
+      - redis
+    entrypoint: /cron.sh
+    networks:
+      - next_frontend
+      - next_backend
 
   caddy:
     build:
@@ -75,8 +104,18 @@ services:
       - "443:443"
     depends_on:
       - nextcloud
+    networks:
+      - next_frontend
+
 volumes:
   PostgresNextcloudData:
   NextcloudData:
   caddy_data:
   caddy_config:
+
+networks:
+  next_frontend:
+    name: nextcloud_frontend
+  next_backend:
+    name: nextcloud_backend
+    internal: true

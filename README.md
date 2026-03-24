@@ -167,6 +167,23 @@ Para que Nextcloud funcione correctamente detrás de Caddy, he inyectado variabl
     
 - **OVERWRITEPROTOCOL:** Fuerza a Nextcloud a generar todos sus enlaces internos bajo `https`, evitando errores de contenido mixto o bloqueos del navegador.
 
+### ⏳Cron
+
+Nextcloud, por defecto, utiliza un sistema de ejecución de tareas tipo `AJAX`. Esto significa que las tareas en segundo plano solo se ejecutan cuando un usuario interactúa con la interfaz web, lo que provoca dos problemas:
+
+1. **Latencia:** El usuario que activa el proceso sufre tiempos de carga elevados.
+    
+2. **Inconsistencia:** Si no hay actividad, las tareas críticas (notificaciones, limpieza, indexación) se retrasan.
+
+La solución: contenedor de cron dedicado.
+Se ha implementado un contenedor paralelo basado en la misma imagen de Nextcloud, configurado específicamente para ejecutar el planificador de tareas de forma independiente.
+
+- **Desacoplamiento:** El servidor principal queda liberado de procesar lógica de mantenimiento durante las peticiones de los usuarios.
+    
+- **Eficiencia:** Al utilizar el binario de PHP-CLI en un bucle ligero, el consumo de recursos es mínimo y solo aumenta durante la ejecución efectiva de las tareas.
+    
+- **Rendimiento:** Garantiza que el sistema esté siempre al día, independientemente del tráfico web.
+
 ---
 ## 🛡️ Proxy Inverso y Seguridad (Caddy)
 
@@ -191,3 +208,20 @@ docker compose logs caddy
 ```
 
 _Si aparece el mensaje `certificate obtained successfully`, la conexión es 100% segura._
+
+---
+## 🌐 Docker Networks
+
+Para mitigar vectores de ataque en caso de una vulnerabilidad en el servidor expuesto, se ha implementado una arquitectura de **redes segmentadas** basada en el principio de menor privilegio.
+
+En lugar de una red única, el despliegue se divide en dos capas aisladas:
+
+- **Red Frontend (`proxy-net`):** Una red aislada donde solo conviven **Caddy** y **Nextcloud**. Caddy actúa como único punto de entrada, derivando el tráfico exclusivamente a la aplicación.
+    
+- **Red Backend (`backend-net`):** Una red privada donde reside la lógica y persistencia. **Nextcloud** se comunica aquí con la **Base de Datos** y **Redis**.
+
+**Ventajas de esta estructura:**
+
+1. **Reducción de la superficie de ataque:** Si el servidor web (Caddy) se ve comprometido, el atacante no tiene visibilidad ni ruta de acceso directa a la base de datos, ya que pertenecen a redes lógicas distintas.
+    
+2. **Aislamiento de persistencia:** Los datos sensibles solo son accesibles por la aplicación Nextcloud, quedando totalmente invisibles para el tráfico externo.
