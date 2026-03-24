@@ -1,0 +1,12 @@
+ppruebas.duckdns.org {
+	root * /var/www/html
+	file_server
+
+	php_fastcgi nextcloud:9000
+
+	encode gzip
+
+	tls {
+		dns duckdns {env.DUCKDNS_TOKEN}
+	}
+}

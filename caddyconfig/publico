@@ -1,0 +1,6 @@
+midominio.duckdns.org {
+	root * /var/www/html
+	file_server
+	php_fastcgi nextcloud:9000
+	encode gzip
+}
