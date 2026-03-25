@@ -3,4 +3,9 @@ midominio.duckdns.org {
 	file_server
 	php_fastcgi nextcloud:9000
 	encode gzip
+
+	redir /.well-known/carddav /remote.php/dav/ 301
+        redir /.well-known/caldav /remote.php/dav/ 301
+
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 }
