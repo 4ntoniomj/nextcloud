@@ -234,7 +234,3 @@ En lugar de una red única, el despliegue se divide en dos capas aisladas:
 1. **Reducción de la superficie de ataque:** Si el servidor web (Caddy) se ve comprometido, el atacante no tiene visibilidad ni ruta de acceso directa a la base de datos, ya que pertenecen a redes lógicas distintas.
     
 2. **Aislamiento de persistencia:** Los datos sensibles solo son accesibles por la aplicación Nextcloud, quedando totalmente invisibles para el tráfico externo.
-
----
-## Configuración de Caddy
-La configuración de Caddy es la recomendad por nextcloud no 
