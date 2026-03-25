@@ -1,6 +1,6 @@
 # ☁️ Nextcloud en Docker
 
-Este repositorio define una infraestructura como código (IaC) para el despliegue de una nube privada basada en Nextcloud. El objetivo es proporcionar un entorno altamente automatizado, resiliente y rigurosamente diseñado para entornos de producción.
+La arquitectura sigue un **enfoque de contenedores multinivel (multi-tier) desacoplado**, aislando los procesos en contenedores dedicados para maximizar la seguridad y la eficiencia de los recursos en un único nodo. El stack tecnológico incluye:
 
 La arquitectura sigue un enfoque estricto de microservicios (un proceso por contenedor) para maximizar la seguridad, la escalabilidad y la eficiencia de los recursos. El stack tecnológico incluye:
 
@@ -49,6 +49,8 @@ POSTGRES_PASSWORD=<tu contraseña>
 DUCKDNS_TOKEN=<tu token>
 ```
 
+⚠️ **Aviso de Arquitectura y Seguridad:** Este stack utiliza un archivo `.env` para simplificar el despliegue inicial y la inyección de credenciales. Para escalar esta solución a un entorno de producción corporativo estricto, se recomienda bifurcar este repositorio y refactorizar el `compose.yaml` para gestionar las contraseñas de PostgreSQL mediante **Docker Secrets**, evitando así la exposición de credenciales en el subproceso del contenedor. Del mismo modo, DuckDNS es excelente para entornos dinámicos, pero carece de SLA empresarial.
+
 ---
 ## 🚀 Despliegue del Stack
 
@@ -67,9 +69,11 @@ docker compose ps
 
 **Criterio de éxito:** Todos los servicios (`Web_Nextcloud`, `Nextcloud`, `BSD_Nextcloud`, `Redis_Nextcloud`) deben mostrar el estado `Up` o `Running`. Si alguno muestra `Exit 1`, revisa los logs con `docker compose logs <servicio>`.
 
-### 🛡️ Recomendación Estratégica: Infraestructura sobre ZFS
+### 🛡️ Recomendación Estratégica: Sistema de Archivos
 
-Implementar un stack de nube privada (Nextcloud + PostgreSQL) sobre sistemas de ficheros convencionales como **ext4, XFS o NTFS** introduce riesgos críticos de integridad y disponibilidad. Para un entorno de producción, la arquitectura debe asentarse sobre **ZFS (Zettabyte File System)** por las siguientes razones técnicas:
+Implementar un stack de nube privada requiere decisiones sólidas sobre el almacenamiento subyacente. Aunque asentar el servidor sobre sistemas de ficheros maduros como **ext4 o XFS (respaldados por LVM/RAID)** es el estándar robusto de la industria, para maximizar la integridad de los datos se recomienda evaluar **ZFS**.
+
+Operar sobre ZFS proporciona ventajas operativas superiores frente a los sistemas convencionales, destacando la prevención nativa de corrupción de datos silenciosa (_bit-rot_) y la capacidad de realizar _snapshots_ atómicos a nivel de bloque para recuperaciones instantáneas. _(Nota: Evitar NTFS en entornos Linux de producción)._
 
 ---
 ## 🦆 Gestión de Dominio y Certificados (DuckDNS)
@@ -234,3 +238,8 @@ En lugar de una red única, el despliegue se divide en dos capas aisladas:
 1. **Reducción de la superficie de ataque:** Si el servidor web (Caddy) se ve comprometido, el atacante no tiene visibilidad ni ruta de acceso directa a la base de datos, ya que pertenecen a redes lógicas distintas.
     
 2. **Aislamiento de persistencia:** Los datos sensibles solo son accesibles por la aplicación Nextcloud, quedando totalmente invisibles para el tráfico externo.
+
+---
+## Mantenimiento y Recuperación ante Desastres (Pendiente)
+
+> Esta infraestructura no está lista para producción hasta que la recuperación de datos esté garantizada. Actualmente, este stack requiere la implementación manual de copias de seguridad. Se recomienda configurar _cronjobs_ en el host para ejecutar `pg_dump` sobre el contenedor de PostgreSQL y sincronizar el directorio de datos (usando `rsync` o `Restic`) hacia un almacenamiento externo u Object Storage (S3).
