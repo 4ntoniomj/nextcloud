@@ -112,6 +112,7 @@ volumes:
   NextcloudData:
   caddy_data:
   caddy_config:
+  clamav_data:
 
 networks:
   next_frontend:

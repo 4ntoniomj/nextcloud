@@ -1,11 +1,44 @@
-midominio.duckdns.org {
-	root * /var/www/html
-	file_server
-	php_fastcgi nextcloud:9000
-	encode gzip
+ppruebas.duckdns.org {
+        root * /var/www/html
+        file_server
+        encode zstd gzip
 
-	redir /.well-known/carddav /remote.php/dav/ 301
-        redir /.well-known/caldav /remote.php/dav/ 301
+        header {
+                Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+                X-Content-Type-Options "nosniff"
+                X-Frame-Options "SAMEORIGIN"
+                X-Permitted-Cross-Domain-Policies "none"
+                X-Robots-Tag "noindex, nofollow"
+                -X-Powered-By
+        }
 
-	header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        @davclnt {
+                header User-Agent *DavClnt*
+                path /
+        }
+        redir @davclnt /remote.php/webdav/{query} 302
+
+        redir /.well-known/carddav /remote.php/dav 301
+        redir /.well-known/caldav /remote.php/dav 301
+
+        rewrite /.well-known/* /index.php{uri}
+
+        redir /remote/* /remote.php{uri} 301
+
+        @forbidden {
+                path /build/* /tests/* /config/* /lib/* /3rdparty/* /templates/* /data/*
+                path /.* /autotest* /occ* /issue* /indie* /db_* /console*
+        }
+        respond @forbidden 404
+
+        @static {
+                path *.css *.js *.mjs *.svg *.gif *.ico *.jpg *.png *.webp *.wasm *.tflite *.>
+        }
+        header @static Cache-Control "public, max-age=15778463"
+
+        php_fastcgi nextcloud:9000 {
+                env front_controller_active true
+                env modHeadersAvailable true
+        }
+
 }

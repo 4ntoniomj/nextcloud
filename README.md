@@ -1,4 +1,5 @@
 # ☁️ Nextcloud en Docker
+
 Este repositorio define una infraestructura como código (IaC) para el despliegue de una nube privada basada en Nextcloud. El objetivo es proporcionar un entorno altamente automatizado, resiliente y rigurosamente diseñado para entornos de producción.
 
 La arquitectura sigue un enfoque estricto de microservicios (un proceso por contenedor) para maximizar la seguridad, la escalabilidad y la eficiencia de los recursos. El stack tecnológico incluye:
@@ -35,7 +36,7 @@ sudo sh /tmp/get-docker.sh
 sudo usermod -aG docker $USER
 ```
 
-También debemos crear un archivo .env donde se deben definir todas las variables que requiere docker compose:
+También debemos crear un archivo .env donde se deben definir todas las variables que requiere Docker Compose:
 
 ```bash
 cp .env.example .env
@@ -65,6 +66,10 @@ docker compose ps
 ```
 
 **Criterio de éxito:** Todos los servicios (`Web_Nextcloud`, `Nextcloud`, `BSD_Nextcloud`, `Redis_Nextcloud`) deben mostrar el estado `Up` o `Running`. Si alguno muestra `Exit 1`, revisa los logs con `docker compose logs <servicio>`.
+
+### 🛡️ Recomendación Estratégica: Infraestructura sobre ZFS
+
+Implementar un stack de nube privada (Nextcloud + PostgreSQL) sobre sistemas de ficheros convencionales como **ext4, XFS o NTFS** introduce riesgos críticos de integridad y disponibilidad. Para un entorno de producción, la arquitectura debe asentarse sobre **ZFS (Zettabyte File System)** por las siguientes razones técnicas:
 
 ---
 ## 🦆 Gestión de Dominio y Certificados (DuckDNS)
@@ -195,6 +200,10 @@ A diferencia de usar la imagen estándar, he construido una versión personaliza
 
 - **Ventaja:** Caddy puede obtener certificados SSL de Let's Encrypt incluso si el servidor no es accesible desde internet o si los puertos 80/443 están cerrados, validando la propiedad del dominio directamente a través de la API de DuckDNS.
 
+### ⚙️ Configuración
+
+Se han integrado las directivas recomendadas por Nextcloud para Caddy, asegurando el manejo correcto de los _headers_ de seguridad y la optimización de los _puntos finales_ (endpoints) de la API, fundamentales para la integridad de los datos.
+
 ### ⚡ Rendimiento (PHP-FPM)
 
 Caddy se comunica con Nextcloud a través del protocolo **FastCGI (puerto 9000)**. Esta arquitectura es superior a la clásica de Apache porque separa el servidor web del motor de procesamiento, permitiendo una gestión de memoria mucho más eficiente y una carga de archivos optimizada gracias a la compresión `gzip`.
@@ -225,3 +234,7 @@ En lugar de una red única, el despliegue se divide en dos capas aisladas:
 1. **Reducción de la superficie de ataque:** Si el servidor web (Caddy) se ve comprometido, el atacante no tiene visibilidad ni ruta de acceso directa a la base de datos, ya que pertenecen a redes lógicas distintas.
     
 2. **Aislamiento de persistencia:** Los datos sensibles solo son accesibles por la aplicación Nextcloud, quedando totalmente invisibles para el tráfico externo.
+
+---
+## Configuración de Caddy
+La configuración de Caddy es la recomendad por nextcloud no 
